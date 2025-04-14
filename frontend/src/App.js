@@ -1,23 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import UploadForm from "./components/UploadForm";
+import GraphView from "./components/GraphView";
+import DataSummary from "./components/DataSummary";
+import "./App.css";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="App" style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <header>
+        <h1>EqualCare</h1>
+        <p>A simple tool to analyze bias in healthcare datasets.</p>
       </header>
+
+      <main>
+        <section>
+          <UploadForm />
+        </section>
+
+        <section>
+          <GraphView />
+        </section>
+
+        <section>
+          <DataSummary />
+        </section>
+      </main>
     </div>
   );
 }
