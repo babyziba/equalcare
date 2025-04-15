@@ -1,0 +1,55 @@
+.uploadForm {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border: 2px dashed #ccc;
+    padding: 2rem;
+    text-align: center;
+    border-radius: 10px;
+    background-color: lightgray;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.uploadForm:hover {
+    background-color: #f3f3f3;
+}
+
+.uploadBtn {
+    color: #0077cc;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.uploadBtn:hover{
+    color: purple;
+}
+
+.fileList {
+    margin-top: 1rem;
+    padding-left: 0;
+    list-style: none;
+}
+
+.fileList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f1f1f1;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.removeBtn {
+    background-color: transparent;
+    border: none;
+    color: red;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.removeBtn:hover {
+    color: darkRed;
+}
