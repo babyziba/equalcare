@@ -1,4 +1,5 @@
 import React from "react";
+import "../CSS/GraphView.css";
 
 function GraphView() {
   return (
