@@ -3,9 +3,10 @@ import "../uploadForm.css";
 import axios from "axios";
 import DataSummary from "./DataSummary";
 
-function UploadForm() {
+function UploadForm({ onUploadComplete }) {
   const [files, setFiles] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const fileInputRef = useRef(null);
 
   //  Add selected files to state
@@ -39,30 +40,60 @@ function UploadForm() {
   };
 
   // BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
-  // Sends the first uploaded file to the FastAPI backend at /upload
   const handleUpload = async () => {
-    if (files.length === 0) return;
+    if (files.length === 0 || selectedCategory === "") {
+      alert("Please select a category and upload a file.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", files[0]);
+    formData.append("category", selectedCategory); // Optional for backend tracking
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        "http://127.0.0.1:8000/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       setAnalysisResult(response.data);
+      onUploadComplete && onUploadComplete(selectedCategory, response.data);
       console.log("Upload successful:", response.data);
     } catch (error) {
-      console.error(" Upload failed:", error);
+      console.error("Upload failed:", error);
     }
   };
-  // END OF BACKEND CONNECTION SECTION 
+  // END OF BACKEND CONNECTION SECTION
 
   return (
     <>
+      {/* Category Dropdown (outside upload box) */}
+      <div style={{ marginBottom: "1rem" }}>
+        <label htmlFor="categorySelect">
+          <strong>Select a medical condition:</strong>
+        </label>
+        <select
+          id="categorySelect"
+          className="categorySelect"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          <option value="">-- Please choose an option --</option>
+          <option value="Heart Attack">Heart Attack</option>
+          <option value="Stroke">Stroke</option>
+          <option value="Auto-Immune disease">Auto-Immune disease</option>
+          <option value="Depression">Depression</option>
+          <option value="Alzheimer’s">Alzheimer’s</option>
+          <option value="Adverse drug reactions">Adverse drug reactions</option>
+        </select>
+      </div>
+
+      {/* Upload Area */}
       <div
         className="uploadForm"
         role="button"
@@ -83,6 +114,7 @@ function UploadForm() {
           style={{ display: "none" }}
           onChange={handleChange}
         />
+
         <p>
           Drag & drop files here or{" "}
           <span className="uploadBtn">Click to Upload</span>{" "}
@@ -101,7 +133,7 @@ function UploadForm() {
                       removeFile(idx);
                     }}
                   >
-                    x{" "}
+                    x
                   </button>
                 </li>
               ))}
@@ -119,9 +151,6 @@ function UploadForm() {
           </>
         )}
       </div>
-
-      {/* Show analysis results below the upload form */}
-      {analysisResult && <DataSummary result={analysisResult} />}
     </>
   );
 }
