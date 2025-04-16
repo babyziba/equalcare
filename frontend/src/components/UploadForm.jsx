@@ -1,9 +1,11 @@
 import React, { useRef, useState } from "react";
 import "../uploadForm.css";
 import axios from "axios";
+import DataSummary from "./DataSummary";
 
 function UploadForm() {
   const [files, setFiles] = useState([]);
+  const [analysisResult, setAnalysisResult] = useState(null); 
   const fileInputRef = useRef(null);
 
   //  Add selected files to state
@@ -36,7 +38,7 @@ function UploadForm() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ⚠️ BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
+  // BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
   // Sends the first uploaded file to the FastAPI backend at /upload
   const handleUpload = async () => {
     if (files.length === 0) return;
@@ -51,13 +53,13 @@ function UploadForm() {
         },
       });
 
-      console.log(" Backend response:", response.data);
-      // TODO: Pass this data to another component or state
+      setAnalysisResult(response.data);
+      console.log("Upload successful:", response.data);
     } catch (error) {
       console.error(" Upload failed:", error);
     }
   };
-  // END OF BACKEND CONNECTION SECTION 🔚
+  // END OF BACKEND CONNECTION SECTION 
 
   return (
     <div
@@ -111,10 +113,13 @@ function UploadForm() {
               handleUpload();
             }}
           >
-            Upload to Backend
+            Upload file
           </button>
         </>
       )}
+
+      {/* Show analysis results below the upload button */}
+      <DataSummary result={analysisResult} />
     </div>
   );
 }
