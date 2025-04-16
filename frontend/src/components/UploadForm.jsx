@@ -1,51 +1,77 @@
 import React, { useRef, useState } from "react";
 import "../uploadForm.css";
+import axios from "axios";
 
 function UploadForm() {
-  //useState to hold the list of updated files
   const [files, setFiles] = useState([]);
-
-  //useRef to trigger the hidden file input
   const fileInputRef = useRef(null);
 
-  // Function to add selected files to the state
+  //  Add selected files to state
   const handleFiles = (selectedFiles) => {
-    //Spread current files while adding new files
     setFiles((prev) => [...prev, ...Array.from(selectedFiles)]);
   };
 
-  // Handle files dropped into the drop box area
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files); // Add dropped files
-      e.dataTransfer.clearData(); // Clear dragged data
-    }
-  };
-
-  //Trigger the hidden file input when user clicks the drop area
+  //  Trigger hidden file input on click
   const handleClick = () => {
     fileInputRef.current.click();
   };
 
-  // Handle file selection via input
+  //  Handle files selected from input
   const handleChange = (e) => {
     handleFiles(e.target.files);
   };
 
-  //Remove file from state by index
+  //  Handle file drop into upload box
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+      e.dataTransfer.clearData();
+    }
+  };
+
+  //  Remove a selected file
   const removeFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ⚠️ BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
+  // Sends the first uploaded file to the FastAPI backend at /upload
+  const handleUpload = async () => {
+    if (files.length === 0) return;
+
+    const formData = new FormData();
+    formData.append("file", files[0]);
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log(" Backend response:", response.data);
+      // TODO: Pass this data to another component or state
+    } catch (error) {
+      console.error(" Upload failed:", error);
+    }
+  };
+  // END OF BACKEND CONNECTION SECTION 🔚
+
   return (
     <div
       className="uploadForm"
+      role="button"
+      tabIndex="0"
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
       onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          handleClick();
+        }
+      }}
     >
       <input
         type="file"
@@ -58,23 +84,36 @@ function UploadForm() {
         Drag & drop files here or{" "}
         <span className="uploadBtn">Click to Upload</span>{" "}
       </p>
+
       {files.length > 0 && (
-        <ul className="fileList">
-          {files.map((file, idx) => (
-            <li key={idx}>
-              {file.name}
-              <button
-                className="removeBtn"
-                onClick={(e) => {
-                  e.stopPropagation(0);
-                  removeFile(idx);
-                }}
-              >
-                x{" "}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="fileList">
+            {files.map((file, idx) => (
+              <li key={idx}>
+                {file.name}
+                <button
+                  className="removeBtn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(idx);
+                  }}
+                >
+                  x{" "}
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            className="uploadBtn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleUpload();
+            }}
+          >
+            Upload to Backend
+          </button>
+        </>
       )}
     </div>
   );
