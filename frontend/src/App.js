@@ -1,8 +1,9 @@
 import React from "react";
 import UploadForm from "./components/UploadForm";
-import GraphView from "./components/GraphView";
+//import GraphView from "./components/GraphView";
 import DataSummary from "./components/DataSummary";
 import "./App.css";
+import GridView from "./components/gridView";
 
 function App() {
   return (
@@ -16,11 +17,10 @@ function App() {
         <section>
           <UploadForm />
         </section>
-
+        
         <section>
-          <GraphView />
+          <GridView />
         </section>
-
         <section>
           <DataSummary />
         </section>

@@ -1,11 +1,25 @@
 import React from "react";
 import "../CSS/GraphView.css";
 
-function GraphView() {
+function GraphView({ graph }) {
+  function onZoomIn() {
+    alert("This worked");
+  }
+
   return (
-    <div>
-      <h2>Graph View</h2>
-      <p>Chart will go here.</p>
+    <div className="indiviualGraph">
+      <div className="graphImg">
+        <img src={graph.url} alt={graph.title} />
+        <div className="zoomIn">
+          <button className="zoomInButton" onClick={onZoomIn}>
+            +
+          </button>
+        </div>
+      </div>
+      <div className="analysis">
+        <h3>{graph.title}</h3>
+        <p>{graph.analysis}</p>
+      </div>
     </div>
   );
 }
