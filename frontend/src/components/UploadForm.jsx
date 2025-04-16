@@ -1,9 +1,11 @@
 import React, { useRef, useState } from "react";
 import "../uploadForm.css";
 import axios from "axios";
+import DataSummary from "./DataSummary";
 
 function UploadForm() {
   const [files, setFiles] = useState([]);
+  const [analysisResult, setAnalysisResult] = useState(null);
   const fileInputRef = useRef(null);
 
   //  Add selected files to state
@@ -36,7 +38,7 @@ function UploadForm() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ⚠️ BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
+  // BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
   // Sends the first uploaded file to the FastAPI backend at /upload
   const handleUpload = async () => {
     if (files.length === 0) return;
@@ -51,71 +53,76 @@ function UploadForm() {
         },
       });
 
-      console.log(" Backend response:", response.data);
-      // TODO: Pass this data to another component or state
+      setAnalysisResult(response.data);
+      console.log("Upload successful:", response.data);
     } catch (error) {
       console.error(" Upload failed:", error);
     }
   };
-  // END OF BACKEND CONNECTION SECTION 🔚
+  // END OF BACKEND CONNECTION SECTION 
 
   return (
-    <div
-      className="uploadForm"
-      role="button"
-      tabIndex="0"
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={handleDrop}
-      onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          handleClick();
-        }
-      }}
-    >
-      <input
-        type="file"
-        multiple
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleChange}
-      />
-      <p>
-        Drag & drop files here or{" "}
-        <span className="uploadBtn">Click to Upload</span>{" "}
-      </p>
+    <>
+      <div
+        className="uploadForm"
+        role="button"
+        tabIndex="0"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            handleClick();
+          }
+        }}
+      >
+        <input
+          type="file"
+          multiple
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleChange}
+        />
+        <p>
+          Drag & drop files here or{" "}
+          <span className="uploadBtn">Click to Upload</span>{" "}
+        </p>
 
-      {files.length > 0 && (
-        <>
-          <ul className="fileList">
-            {files.map((file, idx) => (
-              <li key={idx}>
-                {file.name}
-                <button
-                  className="removeBtn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFile(idx);
-                  }}
-                >
-                  x{" "}
-                </button>
-              </li>
-            ))}
-          </ul>
+        {files.length > 0 && (
+          <>
+            <ul className="fileList">
+              {files.map((file, idx) => (
+                <li key={idx}>
+                  {file.name}
+                  <button
+                    className="removeBtn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile(idx);
+                    }}
+                  >
+                    x{" "}
+                  </button>
+                </li>
+              ))}
+            </ul>
 
-          <button
-            className="uploadBtn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleUpload();
-            }}
-          >
-            Upload to Backend
-          </button>
-        </>
-      )}
-    </div>
+            <button
+              className="uploadBtn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUpload();
+              }}
+            >
+              Upload file
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Show analysis results below the upload form */}
+      {analysisResult && <DataSummary result={analysisResult} />}
+    </>
   );
 }
 
