@@ -1,13 +1,137 @@
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  box-sizing: border-box;
-  width: 100%;
+/* Layout for analysis section */
+.analysis-section {
+  margin-top: 2rem;
+}
+
+.analysis-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2rem;
+}
+
+/* Scrollable left side with dataset cards */
+.scrollable-summary-list {
+  max-height: 500px;
+  overflow-y: auto;
+  min-width: 300px;
+  width: 340px;
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+  flex-shrink: 0;
+  border-right: 1px solid #eee;
+  padding-right: 1rem;
 }
-.section-wrapper {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid #ccc;
+
+/* Dataset summary cards */
+.summary-card,
+.summary-card-wrapper {
+  background-color: #fefefe;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #38b6ff;
+  line-height: 1.6;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.summary-card-wrapper.active {
+  border-color: #38b6ff;
+  box-shadow: 0 0 0 2px rgba(56, 182, 255, 0.25);
+}
+
+/* Right side - graph only */
+.analysis-right {
+  flex: 1;
+  min-width: 400px;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Graph area */
+.graph-standalone {
+  background: none;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  text-align: center;
+}
+
+.chart-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas {
+  max-width: 100%;
+  width: 400px;
+  height: 400px;
+}
+
+/* Bias labels */
+.bias-label {
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.bias-label.balanced {
+  background-color: #5cb85c;
+}
+
+.bias-label.mild_imbalance {
+  background-color: #f0ad4e;
+}
+
+.bias-label.significant_bias {
+  background-color: #d9534f;
+}
+
+/* Clear button below dataset cards */
+.clear-button {
+  padding: 0.75rem;
+  background-color: #ccc;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* AI explanation box (now outside flex layout) */
+.full-width-explanation,
+.ai-explanation-wrapper,
+.explanation-section {
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto 0 auto;
+  background-color: #f8fafd;
+  padding: 2rem;
+  border-left: 5px solid #38b6ff;
+  border-radius: 8px;
+}
+
+.full-width-explanation h3,
+.ai-explanation-wrapper h3,
+.explanation-section h3 {
+  color: #2a80c7;
+  margin-bottom: 0.5rem;
+}
+
+.full-width-explanation p,
+.ai-explanation-wrapper p,
+.explanation-section p {
+  margin: 0;
+  line-height: 1.6;
 }
