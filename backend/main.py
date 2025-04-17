@@ -5,6 +5,14 @@ from analysis import analyze_csv
 from datetime import datetime
 import os
 import subprocess
+from pydantic import BaseModel
+import requests
+from dotenv import load_dotenv
+load_dotenv()
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+
 
 app = FastAPI()
 
@@ -90,3 +98,40 @@ def analyze_existing_file(filename: str, category: str = ""):
     result = analyze_csv(contents, category)
     result["filename"] = filename
     return result
+
+class ExplainBiasRequest(BaseModel):
+    category: str
+    gender_data: dict
+    bias_level: str
+    impact_note: str = ""
+    source: str = ""
+
+@app.post("/explain-bias")
+async def explain_bias(payload: ExplainBiasRequest):
+    prompt = f"""
+You are a healthcare bias expert. A dataset about {payload.category} has the following gender distribution:
+{payload.gender_data}
+Bias level: {payload.bias_level}
+Insight: {payload.impact_note}
+Source: {payload.source}
+
+Explain in 2-4 sentences how this bias could impact clinical outcomes or medical research. Mention the source if it's relevant.
+"""
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "mistralai/mistral-7b-instruct",
+        "messages": [{"role": "user", "content": prompt}]
+    }
+
+    try:
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+        response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"]
+        return {"explanation": content.strip()}
+    except Exception as e:
+        return {"error": str(e)}

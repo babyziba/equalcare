@@ -51,22 +51,6 @@ function DataSummary({ result }) {
           {biasText[bias_level] || "Unknown"}
         </span>
       </p>
-
-      {impact_note && (
-        <>
-          <p>
-            <strong>Impact Insight:</strong> {impact_note}
-          </p>
-          {source && (
-            <p>
-              <strong>Source:</strong>{" "}
-              <a href={source} target="_blank" rel="noopener noreferrer">
-                {source}
-              </a>
-            </p>
-          )}
-        </>
-      )}
     </div>
   );
 }

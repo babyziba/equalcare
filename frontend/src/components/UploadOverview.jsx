@@ -13,7 +13,7 @@ const UploadOverview = ({ onUploadComplete }) => {
   }, []);
 
   const handleReanalyze = (filename) => {
-    fetch(`http://localhost:8000/analyze-file/${filename}?category=`)
+    fetch(`http://localhost:8000/analyze-file/${filename}?category=${encodeURIComponent(filename)}`)
       .then((res) => res.json())
       .then((data) => {
         onUploadComplete && onUploadComplete(filename, data);
