@@ -11,7 +11,7 @@ const categories = [
   "Auto-Immune disease",
   "Depression",
   "Alzheimer’s",
-  "Adverse drug reactions"
+  "Adverse drug reactions",
 ];
 
 function App() {
@@ -20,9 +20,9 @@ function App() {
 
   // Callback for when UploadForm finishes analysis
   const handleUploadComplete = (category, result) => {
-    setCategoryResults(prev => ({
+    setCategoryResults((prev) => ({
       ...prev,
-      [category]: result
+      [category]: result,
     }));
   };
 
@@ -51,11 +51,15 @@ function App() {
             ) : null
           )}
         </section>
-        <section>
-          <h2>Chart</h2>
-         <GraphView />
-        </section>
-
+        <GraphView
+          genderData={
+            Object.values(categoryResults).slice(-1)[0]?.gender_percentages ||
+            {}
+          }
+          genderCounts={
+            Object.values(categoryResults).slice(-1)[0]?.gender_breakdown || {}
+          }
+        />
       </main>
     </div>
   );
