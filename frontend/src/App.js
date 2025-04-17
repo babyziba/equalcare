@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import UploadForm from "./components/UploadForm";
 import DataSummary from "./components/DataSummary";
+import GraphView from "./components/GraphView";
 import "./App.css";
 
 // Category list (easy to reuse everywhere)
@@ -50,6 +51,11 @@ function App() {
             ) : null
           )}
         </section>
+        <section>
+          <h2>Chart</h2>
+         <GraphView />
+        </section>
+
       </main>
     </div>
   );
