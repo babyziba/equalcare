@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import "../uploadForm.css";
+import "../CSS/uploadForm.css";
 import axios from "axios";
 import DataSummary from "./DataSummary";
 
@@ -7,16 +7,48 @@ function UploadForm({ onUploadComplete }) {
   const [files, setFiles] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [uploadedFile, setuploadedFile] = useState(false);
+  const [attemptedUpload, setattemptedUpload] = useState(false);
+  const [isLoading, setLoading] = useState(false);
+  const [isDragging, setDragging] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const fileInputRef = useRef(null);
 
   //  Add selected files to state
-  const handleFiles = (selectedFiles) => {
-    setFiles((prev) => [...prev, ...Array.from(selectedFiles)]);
+  const handleFiles = async (selectedFiles) => {
+    setLoading(true);
+    setErrorMessage(""); // Clears previous error messages
+    try {
+      const fileArray = Array.from(selectedFiles);
+
+      //Validating file type
+      const invalidFile = fileArray.find((file) => file.type !== "text/csv");
+      if (invalidFile) {
+        setErrorMessage("Only CSV files are allowed.");
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 2500)); //Simulating a 2.5s delay for animation
+
+      //Simulating upload or process files here
+      setFiles((prev) => [...prev, ...Array.from(selectedFiles)]);
+    } catch (error) {
+      setErrorMessage(
+        error.message === "Only CSV files are allowed."
+          ? error.message
+          : "Failed to connect to the backend or upload file."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   //  Trigger hidden file input on click
   const handleClick = () => {
-    fileInputRef.current.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Resets File Input
+      fileInputRef.current.click(); // Allows user to select a file
+    }
   };
 
   //  Handle files selected from input
@@ -24,10 +56,21 @@ function UploadForm({ onUploadComplete }) {
     handleFiles(e.target.files);
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragging(false);
+  };
+
   //  Handle file drop into upload box
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    setDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files);
       e.dataTransfer.clearData();
@@ -37,13 +80,15 @@ function UploadForm({ onUploadComplete }) {
   //  Remove a selected file
   const removeFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+    setuploadedFile(false);
   };
 
   // BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
   const handleUpload = async () => {
     if (files.length === 0 || selectedCategory === "") {
       alert("Please select a category and upload a file.");
-      return;
+      setattemptedUpload(true);
+      return Promise.reject("Missing Category");
     }
 
     const formData = new FormData();
@@ -75,7 +120,7 @@ function UploadForm({ onUploadComplete }) {
       {/* Category Dropdown (outside upload box) */}
       <div style={{ marginBottom: "1rem" }}>
         <label htmlFor="categorySelect">
-          <strong>Select a medical condition:</strong>
+          <strong>Select a medical condition: </strong>
         </label>
         <select
           id="categorySelect"
@@ -91,16 +136,17 @@ function UploadForm({ onUploadComplete }) {
           <option value="Alzheimer’s">Alzheimer’s</option>
           <option value="Adverse drug reactions">Adverse drug reactions</option>
         </select>
+        <span className="errorMessage"> {errorMessage}</span>
       </div>
 
       {/* Upload Area */}
       <div
-        className="uploadForm"
+        className={`uploadForm ${isDragging ? "dragging" : ""}`}
         role="button"
         tabIndex="0"
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             handleClick();
@@ -109,45 +155,70 @@ function UploadForm({ onUploadComplete }) {
       >
         <input
           type="file"
-          multiple
           ref={fileInputRef}
           style={{ display: "none" }}
           onChange={handleChange}
         />
 
-        <p>
-          Drag & drop files here or{" "}
-          <span className="uploadBtn">Click to Upload</span>{" "}
-        </p>
-
-        {files.length > 0 && (
+        {isLoading ? (
+          <div className="loadingSpinner" />
+        ) : (
           <>
-            <ul className="fileList">
-              {files.map((file, idx) => (
-                <li key={idx}>
-                  {file.name}
-                  <button
-                    className="removeBtn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFile(idx);
-                    }}
-                  >
-                    x
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {files.length === 0 || (uploadedFile && !attemptedUpload) ? (
+              <p>
+                Drag & drop files here or{" "}
+                <span className="uploadText" onClick={handleClick}>
+                  Click to Upload
+                </span>
+              </p>
+            ) : null}
 
-            <button
-              className="uploadBtn"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleUpload();
-              }}
-            >
-              Upload file
-            </button>
+            {files.length > 0 && (
+              <>
+                <ul className="fileList">
+                  {files.map((file, idx) => (
+                    <li key={idx}>
+                      {file.name}
+                      <button
+                        className="removeBtn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(idx);
+                        }}
+                      >
+                        x
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  className="uploadBtn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setuploadedFile(true);
+                    handleUpload()
+                      .then(() => {
+                        //Resets some of the components
+                        setFiles([]);
+                        setSelectedCategory("");
+                        setuploadedFile(true);
+                        setErrorMessage("");
+                        fileInputRef.current.value = null;
+                      })
+                      .catch((err) => {
+                        setErrorMessage("Please select a category.");
+                        console.log(err); //Err checking
+                      })
+                      .finally(() => {
+                        setLoading(false);
+                      });
+                  }}
+                >
+                  Upload file
+                </button>
+              </>
+            )}
           </>
         )}
       </div>
