@@ -8,6 +8,7 @@ function UploadForm({ onUploadComplete }) {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [uploadedFile, setuploadedFile] = useState(false);
+  const [attemptedUpload, setattemptedUpload] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [isDragging, setDragging] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -27,9 +28,8 @@ function UploadForm({ onUploadComplete }) {
         return;
       }
 
-      //API ERROR
+      await new Promise((resolve) => setTimeout(resolve, 2500)); //Simulating a 2.5s delay for animation
 
-      await new Promise((resolve) => setTimeout(resolve, 2500)); //Simulating a 1s delay for animation
       //Simulating upload or process files here
       setFiles((prev) => [...prev, ...Array.from(selectedFiles)]);
     } catch (error) {
@@ -45,7 +45,10 @@ function UploadForm({ onUploadComplete }) {
 
   //  Trigger hidden file input on click
   const handleClick = () => {
-    fileInputRef.current.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Resets File Input
+      fileInputRef.current.click(); // Allows user to select a file
+    }
   };
 
   //  Handle files selected from input
@@ -77,13 +80,15 @@ function UploadForm({ onUploadComplete }) {
   //  Remove a selected file
   const removeFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+    setuploadedFile(false);
   };
 
   // BACKEND CONNECTION SECTION – ONLY TOUCH IF WORKING WITH THE API
   const handleUpload = async () => {
     if (files.length === 0 || selectedCategory === "") {
       alert("Please select a category and upload a file.");
-      return;
+      setattemptedUpload(true);
+      return Promise.reject("Missing Category");
     }
 
     const formData = new FormData();
@@ -131,10 +136,7 @@ function UploadForm({ onUploadComplete }) {
           <option value="Alzheimer’s">Alzheimer’s</option>
           <option value="Adverse drug reactions">Adverse drug reactions</option>
         </select>
-        <span className="errorMessage">
-          {" "}
-          {} {errorMessage}
-        </span>
+        <span className="errorMessage"> {errorMessage}</span>
       </div>
 
       {/* Upload Area */}
@@ -162,10 +164,10 @@ function UploadForm({ onUploadComplete }) {
           <div className="loadingSpinner" />
         ) : (
           <>
-            {files.length === 0 || uploadedFile ? (
+            {files.length === 0 || (uploadedFile && !attemptedUpload) ? (
               <p>
                 Drag & drop files here or{" "}
-                <span className="uploadBtn" onClick={handleClick}>
+                <span className="uploadText" onClick={handleClick}>
                   Click to Upload
                 </span>
               </p>
@@ -195,7 +197,22 @@ function UploadForm({ onUploadComplete }) {
                   onClick={(e) => {
                     e.stopPropagation();
                     setuploadedFile(true);
-                    handleUpload();
+                    handleUpload()
+                      .then(() => {
+                        //Resets some of the components
+                        setFiles([]);
+                        setSelectedCategory("");
+                        setuploadedFile(true);
+                        setErrorMessage("");
+                        fileInputRef.current.value = null;
+                      })
+                      .catch((err) => {
+                        setErrorMessage("Please select a category.");
+                        console.log(err); //Err checking
+                      })
+                      .finally(() => {
+                        setLoading(false);
+                      });
                   }}
                 >
                   Upload file
