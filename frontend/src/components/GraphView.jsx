@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import "../CSS/GraphView.css";
 
 const GraphView = ({
   genderData = { male: 50, female: 50 },
@@ -29,59 +30,39 @@ const GraphView = ({
         datasets: [
           {
             data: values,
-            backgroundColor: ["#38b6ff", "#ff66c4"],
+            backgroundColor: ["#38b6ff", "#ff6384"],
+            borderWidth: 1,
             borderColor: "#fff",
-            borderWidth: 2,
-            hoverBackgroundColor: ["#acdcf8", "#efb6d9"],
-            hoverBorderWidth: 5,
-            hoverBorderColor: ["#d9d9d9"],
+            hoverOffset: 15, // This makes the segment "lift" on hover
+            hoverBorderColor: "#aaa", // Optional: a soft grey outline when hovering
+            hoverBorderWidth: 2,
           },
         ],
       },
       options: {
         responsive: true,
-        cutout: "50%",
+        maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: "top",
-          },
-          title: {
-            display: true,
-            text: "Gender Distribution",
-          },
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                const value = context.parsed;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percent = ((value / total) * 100).toFixed(1);
-                return `${percent}%`;
-              },
-              title: function (context) {
-                return "";
+            position: "bottom",
+            labels: {
+              color: "#333",
+              font: {
+                size: 14,
               },
             },
-            backgroundColor: "#2e2e2e",
-            titleFont: { size: 14, weight: "bold" },
-            bodyFont: { size: 13 },
-            padding: 10,
-            cornerRadius: 4,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            displayColors: false,
           },
         },
       },
-    });
-
-    return () => {
-      chartInstance.current.destroy();
-    };
+    });    
   }, [genderData, genderCounts]);
 
   return (
-    <div style={{ maxWidth: 400, margin: "0 auto" }}>
-      <canvas ref={chartRef} />
+    <div className="graphWrapper liftOnHover">
+      <h3 className="graphTitle">Gender Distribution</h3>
+      <div className="chartContainer">
+        <canvas ref={chartRef} />
+      </div>
     </div>
   );
 };

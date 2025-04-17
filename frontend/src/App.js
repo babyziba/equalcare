@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import UploadForm from "./components/UploadForm";
 import DataSummary from "./components/DataSummary";
 import GraphView from "./components/GraphView";
-import UploadHistory from "./components/UploadHistory";
+import UploadOverview from "./components/UploadOverview";
+
 import "./App.css";
 
 // Category list (easy to reuse everywhere)
@@ -19,7 +20,7 @@ function App() {
   // Holds results like { "Stroke": { total: 100, ... }, ... }
   const [categoryResults, setCategoryResults] = useState({});
 
-  // Callback for when UploadForm finishes analysis
+  // Callback for when UploadForm or UploadOverview triggers analysis
   const handleUploadComplete = (category, result) => {
     setCategoryResults((prev) => ({
       ...prev,
@@ -43,14 +44,11 @@ function App() {
         {/* Show a summary for each category that has been uploaded */}
         <section>
           <h2>Analysis Results</h2>
-          {categories.map((category) =>
-            categoryResults[category] ? (
-              <div key={category} style={{ marginBottom: "2rem" }}>
-                <h3>{category}</h3>
-                <DataSummary result={categoryResults[category]} />
-              </div>
-            ) : null
-          )}
+          {Object.entries(categoryResults).map(([category, result]) => (
+            <div key={category} style={{ marginBottom: "2rem" }}>
+              <DataSummary result={result} />
+            </div>
+          ))}
         </section>
 
         {/* Chart for most recent result */}
@@ -64,10 +62,9 @@ function App() {
           }
         />
 
-        {/* Upload History section (newly added) */}
-        <section style={{ marginTop: "3rem" }}>
-          <h2>Upload History</h2>
-          <UploadHistory />
+        {/* Dashboard Summary section */}
+        <section className="section-wrapper">
+          <UploadOverview onUploadComplete={handleUploadComplete} />
         </section>
       </main>
     </div>

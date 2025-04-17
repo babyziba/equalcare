@@ -1,10 +1,11 @@
 import React from "react";
+import "../CSS/DataSummary.css";
 
 function DataSummary({ result }) {
   if (!result) return null;
 
   if (result.error) {
-    return <div className="summaryCard error">Error: {result.error}</div>;
+    return <div className="summary-card error">Error: {result.error}</div>;
   }
 
   const {
@@ -13,24 +14,30 @@ function DataSummary({ result }) {
     gender_percentages,
     bias_level,
     impact_note,
-    source
+    source,
   } = result;
 
-  // Convert bias label to friendly display
   const biasText = {
     balanced: "Balanced",
     mild_imbalance: "Mild Imbalance",
-    significant_bias: "Significant Bias"
+    significant_bias: "Significant Bias",
   };
 
   return (
-    <div className="summaryCard">
-      <h3>Dataset Summary</h3>
+    <div className="summary-card">
+      <h3>
+        Dataset Summary
+        {result.filename ? ` — ${result.filename}` : ""}
+      </h3>
 
-      <p><strong>Total Entries:</strong> {total}</p>
+      <p>
+        <strong>Total Entries:</strong> {total}
+      </p>
 
-      <p><strong>Gender Breakdown:</strong></p>
-      <ul>
+      <p>
+        <strong>Gender Breakdown:</strong>
+      </p>
+      <ul className="gender-list">
         {Object.entries(gender_breakdown).map(([key, value]) => (
           <li key={key}>
             {key}: {value} ({gender_percentages?.[key] ?? 0}%)
@@ -40,15 +47,16 @@ function DataSummary({ result }) {
 
       <p>
         <strong>Bias Level:</strong>{" "}
-        <span className={`biasLabel ${bias_level}`}>
+        <span className={`bias-label ${bias_level}`}>
           {biasText[bias_level] || "Unknown"}
         </span>
       </p>
 
-      {/* Impact Note and Source if available */}
       {impact_note && (
         <>
-          <p><strong>Impact Insight:</strong> {impact_note}</p>
+          <p>
+            <strong>Impact Insight:</strong> {impact_note}
+          </p>
           {source && (
             <p>
               <strong>Source:</strong>{" "}

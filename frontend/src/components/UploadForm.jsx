@@ -165,12 +165,12 @@ function UploadForm({ onUploadComplete }) {
         ) : (
           <>
             {files.length === 0 || (uploadedFile && !attemptedUpload) ? (
-              <p>
-                Drag & drop files here or{" "}
-                <span className="uploadText" onClick={handleClick}>
-                  Click to Upload
-                </span>
-              </p>
+             <>
+             <p>Drag & drop files here or</p>
+             <button className="upload-trigger-btn" onClick={handleClick}>
+               Browse Files
+             </button>
+           </>           
             ) : null}
 
             {files.length > 0 && (

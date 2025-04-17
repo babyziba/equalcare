@@ -103,3 +103,30 @@
       font-size: 1.2rem;
     }
   }
+  .graphWrapper {
+    margin: 3rem auto;
+    padding: 2rem;
+    max-width: 500px;
+    background-color: #fefefe;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .graphTitle {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .chartContainer {
+    position: relative;
+    height: 300px;
+    max-width: 350px;
+    margin: 0 auto;
+  }
+  
+  
+  
