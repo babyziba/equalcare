@@ -11,14 +11,16 @@ function DataSummary({ result }) {
     total,
     gender_breakdown,
     gender_percentages,
-    bias_level
+    bias_level,
+    impact_note,
+    source
   } = result;
 
   // Convert bias label to friendly display
   const biasText = {
-    balanced: "Balanced ",
-    mild_imbalance: "Mild Imbalance ",
-    significant_bias: "Significant Bias "
+    balanced: "Balanced",
+    mild_imbalance: "Mild Imbalance",
+    significant_bias: "Significant Bias"
   };
 
   return (
@@ -42,6 +44,21 @@ function DataSummary({ result }) {
           {biasText[bias_level] || "Unknown"}
         </span>
       </p>
+
+      {/* Impact Note and Source if available */}
+      {impact_note && (
+        <>
+          <p><strong>Impact Insight:</strong> {impact_note}</p>
+          {source && (
+            <p>
+              <strong>Source:</strong>{" "}
+              <a href={source} target="_blank" rel="noopener noreferrer">
+                {source}
+              </a>
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }
