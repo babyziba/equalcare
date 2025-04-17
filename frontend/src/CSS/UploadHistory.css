@@ -1,0 +1,21 @@
+.upload-history {
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .upload-history table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .upload-history th,
+  .upload-history td {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .upload-history th {
+    background-color: #f5f5f5;
+  }
+  

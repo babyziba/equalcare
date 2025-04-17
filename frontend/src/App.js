@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import UploadForm from "./components/UploadForm";
 import DataSummary from "./components/DataSummary";
 import GraphView from "./components/GraphView";
+import UploadHistory from "./components/UploadHistory";
 import "./App.css";
 
 // Category list (easy to reuse everywhere)
@@ -51,6 +52,8 @@ function App() {
             ) : null
           )}
         </section>
+
+        {/* Chart for most recent result */}
         <GraphView
           genderData={
             Object.values(categoryResults).slice(-1)[0]?.gender_percentages ||
@@ -60,6 +63,12 @@ function App() {
             Object.values(categoryResults).slice(-1)[0]?.gender_breakdown || {}
           }
         />
+
+        {/* Upload History section (newly added) */}
+        <section style={{ marginTop: "3rem" }}>
+          <h2>Upload History</h2>
+          <UploadHistory />
+        </section>
       </main>
     </div>
   );
