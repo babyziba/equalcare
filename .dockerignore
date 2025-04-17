@@ -1,0 +1,23 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore Node modules and builds
+frontend/node_modules
+frontend/build
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore Git and OS junk
+.git/
+.gitignore
+.DS_Store
+
+# Ignore editor configs
+.vscode/
+.idea/
+
+# Ignore logs and misc
+*.log
