@@ -14,19 +14,14 @@ function UploadForm({ onUploadComplete }) {
   const fileInputRef = useRef(null);
 
   const handleFiles = async (selectedFiles) => {
-    setLoading(true);
     setErrorMessage("");
     try {
       const fileArray = Array.from(selectedFiles);
-
       const invalidFile = fileArray.find((file) => file.type !== "text/csv");
       if (invalidFile) {
         setErrorMessage("Only CSV files are allowed.");
         return;
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-      // Replace existing files instead of adding to them
       setFiles(fileArray);
     } catch (error) {
       setErrorMessage(
@@ -34,8 +29,6 @@ function UploadForm({ onUploadComplete }) {
           ? error.message
           : "Failed to connect to the backend or upload file."
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,6 +78,7 @@ function UploadForm({ onUploadComplete }) {
     const formData = new FormData();
     formData.append("file", files[0]);
 
+    setLoading(true);
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/upload",
@@ -99,8 +93,15 @@ function UploadForm({ onUploadComplete }) {
       setAnalysisResult(response.data);
       onUploadComplete && onUploadComplete(files[0].name, response.data);
       console.log("Upload successful:", response.data);
+      setFiles([]);
+      setuploadedFile(true);
+      setErrorMessage("");
+      fileInputRef.current.value = null;
     } catch (error) {
       console.error("Upload failed:", error);
+      setErrorMessage("Upload failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,20 +163,9 @@ function UploadForm({ onUploadComplete }) {
                   onClick={(e) => {
                     e.stopPropagation();
                     setuploadedFile(true);
-                    handleUpload()
-                      .then(() => {
-                        setFiles([]); // Clear files after successful upload
-                        setuploadedFile(true);
-                        setErrorMessage("");
-                        fileInputRef.current.value = null;
-                      })
-                      .catch((err) => {
-                        setErrorMessage("Please upload a file.");
-                        console.log(err);
-                      })
-                      .finally(() => {
-                        setLoading(false);
-                      });
+                    handleUpload().catch((err) => {
+                      console.log(err);
+                    });
                   }}
                 >
                   Upload file
@@ -185,7 +175,7 @@ function UploadForm({ onUploadComplete }) {
           </>
         )}
       </div>
-      
+
       {errorMessage && <div className="error-message">{errorMessage}</div>}
     </>
   );
