@@ -51,7 +51,7 @@ if rag_collection.count() == 0:
     for i, text in enumerate(rag_texts):
         rag_collection.add(documents=[text], ids=[f"rag_doc_{i}"], embeddings=[rag_embeddings[i]])
 
-print(f"✅ Loaded {len(rag_docs)} docs into vector DB.")
+print(f" Loaded {len(rag_docs)} docs into vector DB.")
 
 # Upload setup
 OXEN_DATASET_DIR = "/Users/justinkalski/Desktop/equalcare-datasets"

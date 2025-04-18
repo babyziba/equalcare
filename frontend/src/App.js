@@ -5,6 +5,7 @@ import GraphView from "./components/GraphView";
 import UploadOverview from "./components/UploadOverview";
 import ExplanationBox from "./components/ExplanationBox";
 import logo from "./CSS/equal_care.png";
+import AiLoader from "./components/AiLoader";
 
 import "./App.css";
 
@@ -13,6 +14,7 @@ function App() {
   const [explanations, setExplanations] = useState({});
   const [activeFile, setActiveFile] = useState(null);
   const [uploadHistory, setUploadHistory] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const fetchUploadHistory = () => {
     fetch("http://localhost:8000/upload-history")
@@ -36,7 +38,11 @@ function App() {
     fetchUploadHistory();
 
     if (result.bias_level && result.bias_level !== "Unknown") {
-      const query = `Dataset: ${filename}, Bias: ${result.bias_level}, Male: ${result.gender_breakdown.male || 0}, Female: ${result.gender_breakdown.female || 0}`;
+      const query = `Dataset: ${filename}, Bias: ${result.bias_level}, Male: ${
+        result.gender_breakdown.male || 0
+      }, Female: ${result.gender_breakdown.female || 0}`;
+
+      setAiLoading(true);
 
       fetch("http://localhost:8000/rag-query", {
         method: "POST",
@@ -95,6 +101,9 @@ function App() {
         })
         .catch((err) => {
           console.error("Failed to fetch RAG insight:", err);
+        })
+        .finally(() => {
+          setAiLoading(false);
         });
     }
   };
@@ -216,21 +225,25 @@ function App() {
 
             {activeFile && (
               <div className="full-width-explanation">
-                {explanations[activeFile] && (
-                  <div className="rag-card-group">
-                    <div className="rag-card">
-                      <h4>📌 Issue</h4>
-                      <p>{explanations[activeFile].issue}</p>
+                {aiLoading ? (
+                  <AiLoader />
+                ) : (
+                  explanations[activeFile] && (
+                    <div className="rag-card-group">
+                      <div className="rag-card">
+                        <h4>📌 Issue</h4>
+                        <p>{explanations[activeFile].issue}</p>
+                      </div>
+                      <div className="rag-card">
+                        <h4>📉 Impact</h4>
+                        <p>{explanations[activeFile].impact}</p>
+                      </div>
+                      <div className="rag-card">
+                        <h4>🛠️ Solution</h4>
+                        <p>{explanations[activeFile].solution}</p>
+                      </div>
                     </div>
-                    <div className="rag-card">
-                      <h4>📉 Impact</h4>
-                      <p>{explanations[activeFile].impact}</p>
-                    </div>
-                    <div className="rag-card">
-                      <h4>🛠️ Solution</h4>
-                      <p>{explanations[activeFile].solution}</p>
-                    </div>
-                  </div>
+                  )
                 )}
               </div>
             )}
