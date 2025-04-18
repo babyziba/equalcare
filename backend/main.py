@@ -27,12 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# RAG setup
 RAG_PDF_DIR = "../research_papers"
 RAG_DB_DIR = "../chroma_db"
 EMBED_MODEL = "all-MiniLM-L6-v2"
 RAG_COLLECTION_NAME = "research_docs"
 
-print("\U0001F4DA Loading PDFs and building vector store...")
+print("📚 Loading PDFs and building vector store...")
 rag_docs = []
 for filename in os.listdir(RAG_PDF_DIR):
     if filename.endswith(".pdf"):
@@ -50,8 +51,9 @@ if rag_collection.count() == 0:
     for i, text in enumerate(rag_texts):
         rag_collection.add(documents=[text], ids=[f"rag_doc_{i}"], embeddings=[rag_embeddings[i]])
 
-print(f"\u2705 Loaded {len(rag_docs)} docs into vector DB.")
+print(f"✅ Loaded {len(rag_docs)} docs into vector DB.")
 
+# Upload setup
 OXEN_DATASET_DIR = "/Users/justinkalski/Desktop/equalcare-datasets"
 UPLOAD_LOG = os.path.join(OXEN_DATASET_DIR, "upload_log.json")
 
@@ -150,38 +152,14 @@ async def query_rag(input: RAGQuery):
         f"{summary_chunks[2]}\n\n"
         f"The dataset mentioned below contains a gender imbalance:\n"
         f"\"{query}\"\n\n"
-        f"Please write a structured summary consisting of exactly 3 sections clearly labeled:\n\n"
-        f"Issue — A short explanation of why this gender imbalance is a problem in healthcare research.\n"
-        f"Impact — How it might affect outcomes, diagnosis, or fairness.\n"
-        f"Solution — Practical actions researchers can take to reduce or address this bias.\n\n"
-        f"Return only these 3 sections, clearly labeled as: Issue, Impact, and Solution."
+        f"Please return a JSON object with keys 'issue', 'impact', and 'solution'.\n"
+        f"Each key should contain a plain English paragraph. No markdown, no labels, just valid JSON."
     )
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
-
-    def extract_sections(text):
-        issue, impact, solution = "", "", ""
-        section_regex = re.compile(
-            r"(Issue|Impact|Solution)\s*[:\-\u2013]?\s*(.*?)(?=\n[A-Z][a-z]+[:\-\u2013]?|\Z)",
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        matches = section_regex.findall(text)
-        for label, content in matches:
-            cleaned = content.strip()
-            if label.lower() == "issue":
-                issue = cleaned
-            elif label.lower() == "impact":
-                impact = cleaned
-            elif label.lower() == "solution":
-                solution = cleaned
-        return {
-            "issue": issue or "Unable to parse issue.",
-            "impact": impact or "Unable to parse impact.",
-            "solution": solution or "Unable to parse solution."
-        }
 
     try:
         response = requests.post(
@@ -194,9 +172,11 @@ async def query_rag(input: RAGQuery):
         )
         response.raise_for_status()
         output = response.json()["choices"][0]["message"]["content"]
-        print(f"\U0001F9D0 Prompt sent to OpenRouter:\n{prompt}")
-        print(f"\u2705 AI Response:\n{output.strip()}")
-        return extract_sections(output.strip())
 
+        print(f"🧐 Prompt sent to OpenRouter:\n{prompt}")
+        print(f"✅ AI Response:\n{output.strip()}")
+
+        structured = json.loads(output)
+        return structured
     except Exception as e:
         return {"error": str(e)}
