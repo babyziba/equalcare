@@ -29,37 +29,39 @@ function App() {
 
   const handleUploadComplete = (filename, result) => {
     if (!filename) return;
-
+  
     setFileResults((prev) => ({
       ...prev,
       [filename]: result,
     }));
     setActiveFile(filename);
     fetchUploadHistory();
-
+  
     if (result.bias_level && result.bias_level !== "Unknown") {
-      const query = `Dataset: ${filename}, Bias: ${result.bias_level}, Male: ${
-        result.gender_breakdown.male || 0
-      }, Female: ${result.gender_breakdown.female || 0}`;
-
       setAiLoading(true);
-
+  
       fetch("http://localhost:8000/rag-query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({
+          dataset_name: filename,
+          bias_level: result.bias_level || "Unknown",
+          gender_breakdown: result.gender_breakdown || {},
+          gender_percentages: result.gender_percentages || {},
+          total_entries: result.total || 0,
+        }),
       })
         .then((res) => res.json())
         .then((data) => {
           console.log("RAG response:", data);
-
+  
           const isStructured =
             typeof data.issue === "string" &&
             typeof data.impact === "string" &&
             typeof data.solution === "string";
-
+  
           if (isStructured) {
             setExplanations((prev) => ({
               ...prev,
@@ -73,16 +75,16 @@ function App() {
             const raw = data.ai_response || "";
             const sectionRegex =
               /(?:^|\n)(Issue|Impact|Solution)\s*[:\-\u2013]?\s*((?:.|\n)*?)(?=\n(?:Issue|Impact|Solution)\s*[:\-\u2013]?|\n*$)/gi;
-
+  
             let fallbackParsed = { issue: "", impact: "", solution: "" };
             let match;
-
+  
             while ((match = sectionRegex.exec(raw)) !== null) {
               const label = match[1].toLowerCase();
               const content = match[2].trim();
               fallbackParsed[label] = content;
             }
-
+  
             setExplanations((prev) => ({
               ...prev,
               [filename]: {
@@ -107,6 +109,7 @@ function App() {
         });
     }
   };
+  
 
   const handleClear = () => {
     setFileResults({});

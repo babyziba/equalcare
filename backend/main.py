@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 from analysis import analyze_csv
 from datetime import datetime
 import os
-import subprocess
 from pydantic import BaseModel
 import requests
 from dotenv import load_dotenv
@@ -13,9 +12,18 @@ from sentence_transformers import SentenceTransformer
 from langchain_community.document_loaders import PyPDFLoader
 import chromadb
 import re
+from supabase import create_client, Client
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("Supabase URL and Service Role Key must be set in .env")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
@@ -51,11 +59,9 @@ if rag_collection.count() == 0:
     for i, text in enumerate(rag_texts):
         rag_collection.add(documents=[text], ids=[f"rag_doc_{i}"], embeddings=[rag_embeddings[i]])
 
-print(f" Loaded {len(rag_docs)} docs into vector DB.")
+print(f"✅ Loaded {len(rag_docs)} docs into vector DB.")
 
-# Upload setup
-OXEN_DATASET_DIR = "/Users/justinkalski/Desktop/equalcare-datasets"
-UPLOAD_LOG = os.path.join(OXEN_DATASET_DIR, "upload_log.json")
+UPLOAD_LOG = "upload_log.json"
 
 def log_upload(filename):
     try:
@@ -72,25 +78,44 @@ def log_upload(filename):
     except Exception as e:
         print("Failed to log upload:", e)
 
+class RAGQuery(BaseModel):
+    dataset_name: str
+    bias_level: str
+    gender_breakdown: dict
+    gender_percentages: dict
+    total_entries: int
+
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), category: str = Form("")):
     contents = await file.read()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{timestamp}_{file.filename}"
-    save_path = os.path.join(OXEN_DATASET_DIR, filename)
 
     try:
-        with open(save_path, "wb") as f:
-            f.write(contents)
-        subprocess.run(["oxen", "add", filename], cwd=OXEN_DATASET_DIR, check=True)
-        subprocess.run(["oxen", "commit", "-m", f"Upload: {filename}"], cwd=OXEN_DATASET_DIR, check=True)
-        subprocess.run(["oxen", "push", "origin", "main"], cwd=OXEN_DATASET_DIR, check=True)
-    except subprocess.CalledProcessError as e:
-        return {"error": f"Failed to version file with Oxen: {str(e)}"}
+        res = supabase.storage.from_(SUPABASE_BUCKET).upload(filename, contents, {"content-type": "text/csv"})
+        if hasattr(res, 'error') and res.error:
+            raise Exception(res.error.message)
+    except Exception as e:
+        return {"error": f"Failed to upload to Supabase: {str(e)}"}
 
     result = analyze_csv(contents, category)
     log_upload(filename)
     return result
+
+@app.get("/analyze-file/{filename}")
+def analyze_existing_file(filename: str, category: str = ""):
+    try:
+        response = supabase.storage.from_(SUPABASE_BUCKET).download(filename)
+        file_bytes = response  
+        result = analyze_csv(file_bytes, category)
+        result["filename"] = filename
+        return result
+    except Exception as e:
+        print("Error re-analyzing file:", str(e))
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to re-analyze file from Supabase: {str(e)}"},
+        )
 
 @app.get("/upload-history")
 def get_upload_history():
@@ -105,38 +130,29 @@ def get_upload_history():
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-@app.get("/analyze-file/{filename}")
-def analyze_existing_file(filename: str, category: str = ""):
-    file_path = os.path.join(OXEN_DATASET_DIR, filename)
-    if not os.path.exists(file_path):
-        return JSONResponse(status_code=404, content={"error": "File not found"})
-    with open(file_path, "rb") as f:
-        contents = f.read()
-    result = analyze_csv(contents, category)
-    result["filename"] = filename
-    return result
-
 @app.delete("/upload-history")
 def delete_upload_history():
     try:
-        deleted = []
-        for filename in os.listdir(OXEN_DATASET_DIR):
-            if filename.endswith(".csv"):
-                os.remove(os.path.join(OXEN_DATASET_DIR, filename))
-                deleted.append(filename)
         if os.path.exists(UPLOAD_LOG):
             os.remove(UPLOAD_LOG)
-        return JSONResponse(content={"message": f"Deleted {len(deleted)} files.", "files": deleted}, status_code=status.HTTP_200_OK)
+        return JSONResponse(content={"message": "Upload log deleted."}, status_code=status.HTTP_200_OK)
     except Exception as e:
         return JSONResponse(content={"error": f"Failed to delete upload history: {str(e)}"}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class RAGQuery(BaseModel):
-    query: str
-
 @app.post("/rag-query")
 async def query_rag(input: RAGQuery):
-    query = input.query
-    query_embedding = rag_model.encode([query])[0]
+    # Prepare the dataset context
+    dataset_summary = (
+        f'Dataset Name: "{input.dataset_name}"\n'
+        f"Total Entries: {input.total_entries}\n"
+        f"Male: {input.gender_breakdown.get('male', 0)} "
+        f"({input.gender_percentages.get('male', 0)}%)\n"
+        f"Female: {input.gender_breakdown.get('female', 0)} "
+        f"({input.gender_percentages.get('female', 0)}%)\n"
+        f"Bias Level: {input.bias_level}"
+    )
+
+    query_embedding = rag_model.encode([dataset_summary])[0]
     results = rag_collection.query(query_embeddings=[query_embedding], n_results=3)
     top_chunks = results["documents"][0]
 
@@ -150,10 +166,10 @@ async def query_rag(input: RAGQuery):
         f"{summary_chunks[0]}\n\n"
         f"{summary_chunks[1]}\n\n"
         f"{summary_chunks[2]}\n\n"
-        f"The dataset mentioned below contains a gender imbalance:\n"
-        f"\"{query}\"\n\n"
-        f"Please return a JSON object with keys 'issue', 'impact', and 'solution'.\n"
-        f"Each key should contain a plain English paragraph. No markdown, no labels, just valid JSON."
+        f"The dataset under review has the following summary:\n"
+        f"{dataset_summary}\n\n"
+        f"Based on the above, return a JSON object with keys 'issue', 'impact', and 'solution'. "
+        f"Each key should contain a plain English paragraph. No markdown, no labels — just valid JSON."
     )
 
     headers = {
@@ -176,7 +192,17 @@ async def query_rag(input: RAGQuery):
         print(f"🧐 Prompt sent to OpenRouter:\n{prompt}")
         print(f"✅ AI Response:\n{output.strip()}")
 
-        structured = json.loads(output)
+        try:
+            json_block = re.search(r'{.*}', output, re.DOTALL).group(0)
+            structured = json.loads(json_block)
+        except Exception as e:
+            print("⚠️ Failed to parse JSON from model response:", e)
+            structured = {
+                "issue": "AI response did not return structured JSON.",
+                "impact": "Cannot parse impact due to formatting issue.",
+                "solution": "Please try re-uploading or re-analyzing the dataset."
+            }
+
         return structured
     except Exception as e:
         return {"error": str(e)}
