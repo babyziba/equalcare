@@ -4,6 +4,7 @@ import DataSummary from "./components/DataSummary";
 import GraphView from "./components/GraphView";
 import UploadOverview from "./components/UploadOverview";
 import ExplanationBox from "./components/ExplanationBox";
+import logo from "./CSS/equal_care.png";
 
 import "./App.css";
 
@@ -33,7 +34,7 @@ function App() {
     }));
     setActiveFile(filename);
 
-    fetchUploadHistory(); //  Refresh upload history from backend
+    fetchUploadHistory();
 
     if (result.bias_level && result.bias_level !== "Unknown") {
       fetch("http://localhost:8000/explain-bias", {
@@ -81,10 +82,17 @@ function App() {
 
   return (
     <div className="App" style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <header>
-        <h1>EqualCare</h1>
-        <p>A simple tool to analyze bias in healthcare datasets.</p>
+      <header className="hero-section">
+        <img src={logo} alt="EqualCare logo" className="hero-logo" />
       </header>
+      <section className="intro-text">
+        <p>
+          EqualCare is a bias detection tool for healthcare researchers and
+          developers. Upload your clinical trial datasets and we’ll analyze
+          gender representation, highlight imbalance, and explain how it may
+          impact real-world outcomes.
+        </p>
+      </section>
 
       <main>
         <section>
@@ -94,25 +102,27 @@ function App() {
         {Object.keys(fileResults).length > 0 && (
           <section className="analysis-section">
             <div className="analysis-wrapper">
-              {/* Left side - scrollable summaries */}
               <div className="scrollable-summary-list">
-                {Object.entries(fileResults).map(([file, result]) => (
-                  <div
-                    key={file}
-                    className={`summary-card-wrapper ${
-                      activeFile === file ? "active" : ""
-                    }`}
-                    onClick={() => setActiveFile(file)}
-                  >
-                    <DataSummary result={result} />
-                  </div>
-                ))}
-                <button className="clear-button" onClick={handleClear}>
-                  Clear All
-                </button>
+                <div className="summary-card-scroll-area">
+                  {Object.entries(fileResults).map(([file, result]) => (
+                    <div
+                      key={file}
+                      className={`summary-card-wrapper ${
+                        activeFile === file ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFile(file)}
+                    >
+                      <DataSummary result={result} />
+                    </div>
+                  ))}
+                </div>
+                <div className="sticky-button-container">
+                  <button className="clear-button" onClick={handleClear}>
+                    Clear All
+                  </button>
+                </div>
               </div>
 
-              {/* Right side - graph only */}
               <div className="analysis-right">
                 {activeFile && fileResults[activeFile] && (
                   <GraphView
@@ -127,7 +137,6 @@ function App() {
               </div>
             </div>
 
-            {/* Full-width AI explanation box */}
             {activeFile && (
               <div className="full-width-explanation">
                 <ExplanationBox explanation={explanations[activeFile] || ""} />

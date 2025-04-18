@@ -2,12 +2,15 @@ import React from "react";
 import "../CSS/DataSummary.css";
 
 function DataSummary({ result }) {
+  // If there's no result, render nothing
   if (!result) return null;
 
+  // If there's an error in the result object, show error message
   if (result.error) {
     return <div className="summary-card error">Error: {result.error}</div>;
   }
 
+  // Destructure values from result
   const {
     total,
     gender_breakdown,
@@ -15,25 +18,38 @@ function DataSummary({ result }) {
     bias_level,
     impact_note,
     source,
+    filename,
   } = result;
 
+  // Friendly labels for bias levels
   const biasText = {
     balanced: "Balanced",
     mild_imbalance: "Mild Imbalance",
     significant_bias: "Significant Bias",
   };
 
+  // Clean and format the filename for display (remove timestamp, underscores, extension)
+  const formatFilename = (name) => {
+    return name
+      ?.replace(/^\d{14}_/, "") 
+      .replace(/\.[^/.]+$/, "") 
+      .replace(/_/g, " ") 
+      .replace(/\b\w/g, (char) => char.toUpperCase()); 
+  };
+
   return (
     <div className="summary-card">
       <h3>
         Dataset Summary
-        {result.filename ? ` — ${result.filename}` : ""}
+        {filename ? ` — ${formatFilename(filename)}` : ""}
       </h3>
 
+      {/* Show total number of entries in the dataset */}
       <p>
         <strong>Total Entries:</strong> {total}
       </p>
 
+      {/* Gender breakdown list with counts and percentages */}
       <p>
         <strong>Gender Breakdown:</strong>
       </p>
@@ -45,6 +61,7 @@ function DataSummary({ result }) {
         ))}
       </ul>
 
+      {/* Bias level with styled label */}
       <p>
         <strong>Bias Level:</strong>{" "}
         <span className={`bias-label ${bias_level}`}>

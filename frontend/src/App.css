@@ -1,3 +1,10 @@
+.App {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: sans-serif;
+}
+
 /* Layout for analysis section */
 .analysis-section {
   margin-top: 2rem;
@@ -13,16 +20,46 @@
 
 /* Scrollable left side with dataset cards */
 .scrollable-summary-list {
-  max-height: 500px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 550px;
   min-width: 300px;
   width: 340px;
+  border-right: 1px solid #eee;
+  padding-right: 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.summary-card-scroll-area {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  flex-shrink: 0;
-  border-right: 1px solid #eee;
-  padding-right: 1rem;
+  padding-bottom: 0.5rem; 
+}
+
+/* Sticky Clear All button */
+.sticky-button-container {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding-top: 0.5rem;
+  z-index: 1;
+}
+
+/* Clear All button itself */
+.clear-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #ccc;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0;
 }
 
 /* Dataset summary cards */
@@ -98,18 +135,7 @@ canvas {
   background-color: #d9534f;
 }
 
-/* Clear button below dataset cards */
-.clear-button {
-  padding: 0.75rem;
-  background-color: #ccc;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 1rem;
-}
-
-/* AI explanation box (now outside flex layout) */
+/* AI explanation box (full width) */
 .full-width-explanation,
 .ai-explanation-wrapper,
 .explanation-section {
@@ -135,3 +161,40 @@ canvas {
   margin: 0;
   line-height: 1.6;
 }
+
+.hero-logo {
+  width: 180px;
+  height: auto;
+  display: block;
+  margin: 0 auto 1.5rem auto;
+}
+.intro-text {
+  max-width: 700px;
+  margin: 1.5rem auto 2rem auto;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+body {
+  background: linear-gradient(to bottom, #f9fafe, #eef1f7);
+}
+
+.uploadForm, .summary-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+button {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.uploadBtn:hover,
+.upload-trigger-btn:hover {
+  background-color: #199ce6;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
