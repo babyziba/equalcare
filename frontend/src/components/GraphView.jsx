@@ -30,18 +30,20 @@ const GraphView = ({
         datasets: [
           {
             data: values,
-            backgroundColor: ["#38b6ff", "#ff6384"],
-            borderWidth: 1,
+            backgroundColor: ["#38b6ff", "#ff66c4"],
+            borderWidth: 2,
             borderColor: "#fff",
+            hoverBackgroundColor: ["#acdcf8", "#efb6d9"],
+            hoverBorderWidth: 5,
+            hoverBorderColor: ["#d9d9d9"],
             hoverOffset: 15, // This makes the segment "lift" on hover
-            hoverBorderColor: "#aaa", // Optional: a soft grey outline when hovering
-            hoverBorderWidth: 2,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '50%',
         plugins: {
           legend: {
             position: "bottom",
@@ -52,6 +54,18 @@ const GraphView = ({
               },
             },
           },
+          title: {
+            display: false, // Changed to false to avoid duplicate title
+            text: 'Gender Distribution',
+            font: {
+              size: 16,
+              weight: 'bold',
+            },
+            padding: {
+              top: 10,
+              bottom: 20
+            }
+          }
         },
       },
     });    
@@ -68,3 +82,4 @@ const GraphView = ({
 };
 
 export default GraphView;
+

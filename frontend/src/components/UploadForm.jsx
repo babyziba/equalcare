@@ -26,7 +26,8 @@ function UploadForm({ onUploadComplete }) {
       }
 
       await new Promise((resolve) => setTimeout(resolve, 2500));
-      setFiles((prev) => [...prev, ...fileArray]);
+      // Replace existing files instead of adding to them
+      setFiles(fileArray);
     } catch (error) {
       setErrorMessage(
         error.message === "Only CSV files are allowed."
@@ -130,16 +131,14 @@ function UploadForm({ onUploadComplete }) {
           <div className="loadingSpinner" />
         ) : (
           <>
-            {files.length === 0 || (uploadedFile && !attemptedUpload) ? (
+            {files.length === 0 ? (
               <>
                 <p>Drag & drop files here or</p>
                 <button className="upload-trigger-btn" onClick={handleClick}>
                   Browse Files
                 </button>
               </>
-            ) : null}
-
-            {files.length > 0 && (
+            ) : (
               <>
                 <ul className="fileList">
                   {files.map((file, idx) => (
@@ -165,7 +164,7 @@ function UploadForm({ onUploadComplete }) {
                     setuploadedFile(true);
                     handleUpload()
                       .then(() => {
-                        setFiles([]);
+                        setFiles([]); // Clear files after successful upload
                         setuploadedFile(true);
                         setErrorMessage("");
                         fileInputRef.current.value = null;
@@ -186,6 +185,8 @@ function UploadForm({ onUploadComplete }) {
           </>
         )}
       </div>
+      
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
     </>
   );
 }

@@ -33,7 +33,6 @@ function App() {
       [filename]: result,
     }));
     setActiveFile(filename);
-
     fetchUploadHistory();
 
     if (result.bias_level && result.bias_level !== "Unknown") {
@@ -81,27 +80,67 @@ function App() {
   };
 
   return (
-    <div className="App" style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <header className="hero-section">
-        <img src={logo} alt="EqualCare logo" className="hero-logo" />
-      </header>
-      <section className="intro-text">
-        <p>
-          EqualCare is a bias detection tool for healthcare researchers and
-          developers. Upload your clinical trial datasets and we’ll analyze
-          gender representation, highlight imbalance, and explain how it may
-          impact real-world outcomes.
-        </p>
-      </section>
-
-      <main>
-        <section>
+    <div className="App">
+      {/* Hero Section */}
+      <div className="hero-fullwrap">
+        <header className="hero-section">
+          <img src={logo} alt="EqualCare logo" className="hero-logo" />
+          <p className="hero-badge">
+            ⚖️ Gender Equity in Research Starts with Data
+          </p>
+        </header>
+      </div>
+      
+      {/* Purpose & Impact Section */}
+      <div className="purpose-section">
+        <div className="purpose-container">
+          <h2>Our Mission: Gender Balance in Healthcare Research</h2>
+          <p className="purpose-text">
+            EqualCare is a bias detection tool for healthcare researchers and
+            developers. Upload your clinical trial datasets and we'll analyze
+            gender representation, highlight imbalance, and explain how it may
+            impact real-world outcomes.
+          </p>
+          <div className="impact-points">
+            <div className="impact-item">
+              <span className="impact-icon">🔬</span>
+              <h3>Better Research</h3>
+              <p>Inclusive datasets produce research that reflects the realities of diverse populations.</p>
+            </div>
+            <div className="impact-item">
+              <span className="impact-icon">💊</span>
+              <h3>Informed Care</h3>
+              <p>Understanding how different genders respond to treatment leads to safer, more effective therapies.</p>
+            </div>
+            <div className="impact-item">
+              <span className="impact-icon">⚕️</span>
+              <h3>Health Equity</h3>
+              <p>Balanced data is the foundation of fair, effective, and equitable healthcare for everyone.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <main className="main-content">
+        {/* Process Steps */}
+        <div className="process-steps">
+          <div className="step-bubble">📤 Upload a dataset</div>
+          <div className="step-bubble">📊 View gender breakdown</div>
+          <div className="step-bubble">🧠 Get AI-powered insight</div>
+        </div>
+        
+        {/* Upload Section */}
+        <section className="upload-section">
           <UploadForm onUploadComplete={handleUploadComplete} />
         </section>
 
+        {/* Analysis Section - Only render if we have file results */}
         {Object.keys(fileResults).length > 0 && (
           <section className="analysis-section">
+            {/* Analysis Wrapper with flex layout */}
             <div className="analysis-wrapper">
+              {/* Left side - Summary List */}
               <div className="scrollable-summary-list">
                 <div className="summary-card-scroll-area">
                   {Object.entries(fileResults).map(([file, result]) => (
@@ -123,6 +162,7 @@ function App() {
                 </div>
               </div>
 
+              {/* Right side - Graph View */}
               <div className="analysis-right">
                 {activeFile && fileResults[activeFile] && (
                   <GraphView
@@ -137,6 +177,7 @@ function App() {
               </div>
             </div>
 
+            {/* AI Explanation (below analysis) */}
             {activeFile && (
               <div className="full-width-explanation">
                 <ExplanationBox explanation={explanations[activeFile] || ""} />
@@ -145,6 +186,7 @@ function App() {
           </section>
         )}
 
+        {/* Upload History Section */}
         <section className="section-wrapper">
           <UploadOverview
             uploadHistory={uploadHistory}
