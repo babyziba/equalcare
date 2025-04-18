@@ -81,6 +81,15 @@
   .clickable-file:hover {
     text-decoration: underline;
   }
+  .clear-history-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #ccc;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+  }
   
   
   

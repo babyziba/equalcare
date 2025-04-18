@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import UploadForm from "./components/UploadForm";
 import DataSummary from "./components/DataSummary";
 import GraphView from "./components/GraphView";
@@ -11,6 +11,18 @@ function App() {
   const [fileResults, setFileResults] = useState({});
   const [explanations, setExplanations] = useState({});
   const [activeFile, setActiveFile] = useState(null);
+  const [uploadHistory, setUploadHistory] = useState([]);
+
+  const fetchUploadHistory = () => {
+    fetch("http://localhost:8000/upload-history")
+      .then((res) => res.json())
+      .then((data) => setUploadHistory(data))
+      .catch((err) => console.error("Failed to fetch upload history", err));
+  };
+
+  useEffect(() => {
+    fetchUploadHistory();
+  }, []);
 
   const handleUploadComplete = (filename, result) => {
     if (!filename) return;
@@ -20,6 +32,8 @@ function App() {
       [filename]: result,
     }));
     setActiveFile(filename);
+
+    fetchUploadHistory(); //  Refresh upload history from backend
 
     if (result.bias_level && result.bias_level !== "Unknown") {
       fetch("http://localhost:8000/explain-bias", {
@@ -52,6 +66,17 @@ function App() {
     setFileResults({});
     setExplanations({});
     setActiveFile(null);
+  };
+
+  const clearUploadHistory = () => {
+    fetch("http://localhost:8000/upload-history", { method: "DELETE" })
+      .then(() => {
+        setUploadHistory([]);
+        setFileResults({});
+        setExplanations({});
+        setActiveFile(null);
+      })
+      .catch((err) => console.error("Failed to clear upload history", err));
   };
 
   return (
@@ -112,7 +137,11 @@ function App() {
         )}
 
         <section className="section-wrapper">
-          <UploadOverview onUploadComplete={handleUploadComplete} />
+          <UploadOverview
+            uploadHistory={uploadHistory}
+            clearHistory={clearUploadHistory}
+            onUploadComplete={handleUploadComplete}
+          />
         </section>
       </main>
     </div>

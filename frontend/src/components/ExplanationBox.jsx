@@ -1,5 +1,4 @@
 import React from "react";
-import "../CSS/ExplanationBox.css";
 
 const ExplanationBox = ({ explanation }) => {
   if (!explanation) return null;
