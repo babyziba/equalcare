@@ -36,28 +36,65 @@ function App() {
     fetchUploadHistory();
 
     if (result.bias_level && result.bias_level !== "Unknown") {
-      fetch("http://localhost:8000/explain-bias", {
+      const query = `Dataset: ${filename}, Bias: ${result.bias_level}, Male: ${result.gender_breakdown.male || 0}, Female: ${result.gender_breakdown.female || 0}`;
+
+      fetch("http://localhost:8000/rag-query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          category: filename,
-          gender_data: result.gender_breakdown,
-          bias_level: result.bias_level,
-          impact_note: result.impact_note || "",
-          source: result.source || "",
-        }),
+        body: JSON.stringify({ query }),
       })
         .then((res) => res.json())
         .then((data) => {
-          setExplanations((prev) => ({
-            ...prev,
-            [filename]: data.explanation || "",
-          }));
+          console.log("RAG response:", data);
+
+          const isStructured =
+            typeof data.issue === "string" &&
+            typeof data.impact === "string" &&
+            typeof data.solution === "string";
+
+          if (isStructured) {
+            setExplanations((prev) => ({
+              ...prev,
+              [filename]: {
+                issue: data.issue.trim(),
+                impact: data.impact.trim(),
+                solution: data.solution.trim(),
+              },
+            }));
+          } else {
+            const raw = data.ai_response || "";
+            const sectionRegex =
+              /(?:^|\n)(Issue|Impact|Solution)\s*[:\-\u2013]?\s*((?:.|\n)*?)(?=\n(?:Issue|Impact|Solution)\s*[:\-\u2013]?|\n*$)/gi;
+
+            let fallbackParsed = { issue: "", impact: "", solution: "" };
+            let match;
+
+            while ((match = sectionRegex.exec(raw)) !== null) {
+              const label = match[1].toLowerCase();
+              const content = match[2].trim();
+              fallbackParsed[label] = content;
+            }
+
+            setExplanations((prev) => ({
+              ...prev,
+              [filename]: {
+                issue:
+                  fallbackParsed.issue ||
+                  "No issue explanation found in AI response.",
+                impact:
+                  fallbackParsed.impact ||
+                  "No impact explanation found in AI response.",
+                solution:
+                  fallbackParsed.solution ||
+                  "No solution explanation found in AI response.",
+              },
+            }));
+          }
         })
         .catch((err) => {
-          console.error("Failed to fetch AI explanation", err);
+          console.error("Failed to fetch RAG insight:", err);
         });
     }
   };
@@ -81,7 +118,6 @@ function App() {
 
   return (
     <div className="App">
-      {/* Hero Section */}
       <div className="hero-fullwrap">
         <header className="hero-section">
           <img src={logo} alt="EqualCare logo" className="hero-logo" />
@@ -90,8 +126,7 @@ function App() {
           </p>
         </header>
       </div>
-      
-      {/* Purpose & Impact Section */}
+
       <div className="purpose-section">
         <div className="purpose-container">
           <h2>Our Mission: Gender Balance in Healthcare Research</h2>
@@ -105,42 +140,45 @@ function App() {
             <div className="impact-item">
               <span className="impact-icon">🔬</span>
               <h3>Better Research</h3>
-              <p>Inclusive datasets produce research that reflects the realities of diverse populations.</p>
+              <p>
+                Inclusive datasets produce research that reflects the realities
+                of diverse populations.
+              </p>
             </div>
             <div className="impact-item">
               <span className="impact-icon">💊</span>
               <h3>Informed Care</h3>
-              <p>Understanding how different genders respond to treatment leads to safer, more effective therapies.</p>
+              <p>
+                Understanding how different genders respond to treatment leads
+                to safer, more effective therapies.
+              </p>
             </div>
             <div className="impact-item">
               <span className="impact-icon">⚕️</span>
               <h3>Health Equity</h3>
-              <p>Balanced data is the foundation of fair, effective, and equitable healthcare for everyone.</p>
+              <p>
+                Balanced data is the foundation of fair, effective, and
+                equitable healthcare for everyone.
+              </p>
             </div>
           </div>
         </div>
       </div>
-      
-      {/* Main Content */}
+
       <main className="main-content">
-        {/* Process Steps */}
         <div className="process-steps">
           <div className="step-bubble">📤 Upload a dataset</div>
           <div className="step-bubble">📊 View gender breakdown</div>
           <div className="step-bubble">🧠 Get AI-powered insight</div>
         </div>
-        
-        {/* Upload Section */}
+
         <section className="upload-section">
           <UploadForm onUploadComplete={handleUploadComplete} />
         </section>
 
-        {/* Analysis Section - Only render if we have file results */}
         {Object.keys(fileResults).length > 0 && (
           <section className="analysis-section">
-            {/* Analysis Wrapper with flex layout */}
             <div className="analysis-wrapper">
-              {/* Left side - Summary List */}
               <div className="scrollable-summary-list">
                 <div className="summary-card-scroll-area">
                   {Object.entries(fileResults).map(([file, result]) => (
@@ -162,7 +200,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Right side - Graph View */}
               <div className="analysis-right">
                 {activeFile && fileResults[activeFile] && (
                   <GraphView
@@ -177,16 +214,29 @@ function App() {
               </div>
             </div>
 
-            {/* AI Explanation (below analysis) */}
             {activeFile && (
               <div className="full-width-explanation">
-                <ExplanationBox explanation={explanations[activeFile] || ""} />
+                {explanations[activeFile] && (
+                  <div className="rag-card-group">
+                    <div className="rag-card">
+                      <h4>📌 Issue</h4>
+                      <p>{explanations[activeFile].issue}</p>
+                    </div>
+                    <div className="rag-card">
+                      <h4>📉 Impact</h4>
+                      <p>{explanations[activeFile].impact}</p>
+                    </div>
+                    <div className="rag-card">
+                      <h4>🛠️ Solution</h4>
+                      <p>{explanations[activeFile].solution}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </section>
         )}
 
-        {/* Upload History Section */}
         <section className="section-wrapper">
           <UploadOverview
             uploadHistory={uploadHistory}
