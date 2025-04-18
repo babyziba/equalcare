@@ -3,3 +3,7 @@ frontend/node_modules/
 __pycache__/
 *.pyc
 .env
+# Ignore ChromaDB and research paper source PDFs
+chroma_db/
+research_papers/
+
